@@ -32,6 +32,8 @@ class MonitorPlayback(QDialog):
         play.clicked.connect(self.start)
         movie = buttons.addButton('同期再生（映像のみ）', QDialogButtonBox.ButtonRole.ActionRole)
         movie.clicked.connect(lambda: self.launch_worker('movie_sync.py'))
+        rolling = buttons.addButton('GPU先読み再生（最大3秒・映像のみ）', QDialogButtonBox.ButtonRole.ActionRole)
+        rolling.clicked.connect(lambda: self.launch_worker('rolling_playback.py'))
         self.check = buttons.addButton('先頭4枚で同期確認（3秒）', QDialogButtonBox.ButtonRole.ActionRole)
         self.check.clicked.connect(lambda: self.launch_worker('cycle_check.py'))
         moving = buttons.addButton('動画冒頭をGPU先読み（3秒）', QDialogButtonBox.ButtonRole.ActionRole)
