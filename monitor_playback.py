@@ -34,6 +34,8 @@ class MonitorPlayback(QDialog):
         movie.clicked.connect(lambda: self.launch_worker('movie_sync.py'))
         self.check = buttons.addButton('先頭4枚で同期確認（3秒）', QDialogButtonBox.ButtonRole.ActionRole)
         self.check.clicked.connect(lambda: self.launch_worker('cycle_check.py'))
+        moving = buttons.addButton('動画冒頭をGPU先読み（3秒）', QDialogButtonBox.ButtonRole.ActionRole)
+        moving.clicked.connect(lambda: self.launch_worker('cycle_check.py', '--moving'))
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
@@ -44,7 +46,7 @@ class MonitorPlayback(QDialog):
             message += f' 現在は {hz:g} Hz のため、全フレームの等速提示はできません。'
         self.message.setText(message)
 
-    def launch_worker(self, script):
+    def launch_worker(self, script, *options):
         screen = self.screens[self.choice.currentIndex()]
         if screen not in QApplication.screens():
             QMessageBox.warning(self, '画面が切断されました', '画面選択を開き直してください。')
@@ -60,7 +62,7 @@ class MonitorPlayback(QDialog):
         self.worker.errorOccurred.connect(self.check_error)
         self.setEnabled(False)
         self.worker.start(sys.executable, [str(Path(__file__).with_name(script)),
-                          self.path, str(center.x()-160), str(center.y()-90)])
+                          self.path, str(center.x()-160), str(center.y()-90), *options])
 
     def check_error(self, error):
         self.setEnabled(True)
