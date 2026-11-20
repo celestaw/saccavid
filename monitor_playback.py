@@ -28,10 +28,12 @@ class MonitorPlayback(QDialog):
         self.choice.setCurrentIndex(len(self.screens) - 1)
         self.describe()
         buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Cancel)
-        play = buttons.addButton('この画面で再生', QDialogButtonBox.ButtonRole.ActionRole)
+        play = buttons.addButton('通常再生（ffplay）', QDialogButtonBox.ButtonRole.ActionRole)
         play.clicked.connect(self.start)
+        movie = buttons.addButton('同期再生（映像のみ）', QDialogButtonBox.ButtonRole.ActionRole)
+        movie.clicked.connect(lambda: self.launch_worker('movie_sync.py'))
         self.check = buttons.addButton('先頭4枚で同期確認（3秒）', QDialogButtonBox.ButtonRole.ActionRole)
-        self.check.clicked.connect(self.check_cycle)
+        self.check.clicked.connect(lambda: self.launch_worker('cycle_check.py'))
         buttons.rejected.connect(self.reject)
         layout.addWidget(buttons)
 
@@ -42,7 +44,7 @@ class MonitorPlayback(QDialog):
             message += f' 現在は {hz:g} Hz のため、全フレームの等速提示はできません。'
         self.message.setText(message)
 
-    def check_cycle(self):
+    def launch_worker(self, script):
         screen = self.screens[self.choice.currentIndex()]
         if screen not in QApplication.screens():
             QMessageBox.warning(self, '画面が切断されました', '画面選択を開き直してください。')
@@ -57,7 +59,7 @@ class MonitorPlayback(QDialog):
         self.worker.finished.connect(self.check_finished)
         self.worker.errorOccurred.connect(self.check_error)
         self.setEnabled(False)
-        self.worker.start(sys.executable, [str(Path(__file__).with_name('cycle_check.py')),
+        self.worker.start(sys.executable, [str(Path(__file__).with_name(script)),
                           self.path, str(center.x()-160), str(center.y()-90)])
 
     def check_error(self, error):
