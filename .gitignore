@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+# generated media / logs (regenerate with the scripts in tests/)
+tests/*.mp4
+tests/*.csv
+tests/*.png
+*.flips.csv
+codex_review_run*.log
+codex_review_full_prompt.txt
+tests/*.applied.json
