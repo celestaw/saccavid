@@ -8,13 +8,13 @@ from pygame._sdl2.video import Window, Renderer, Texture
 from editor_preview import VideoSource
 
 
-def preload(source, count):
+def preload(source, count, start_frame=0):
     # Identical frames can share a texture, but every output slot keeps its place.
     unique = []
     slots = []
     lookup = {}
     size = 0
-    for index in range(min(count, source.frame_count)):
+    for index in range(start_frame, min(start_frame + count, source.frame_count)):
         frame = source.read(index)
         key = hashlib.sha256(memoryview(frame)).digest()
         if key not in lookup:
@@ -30,11 +30,12 @@ def preload(source, count):
     return unique, slots
 
 
-def run(path, x, y, count=4):
+def run(path, x, y, count=4, seconds=0.):
     with VideoSource(path) as source:
         if abs(source.info['fps'] - 480) > .01 or source.frame_count < 4:
             raise ValueError('480 fpsの書き出し動画を指定してください。')
-        frames, slots = preload(source, count)
+        start_frame = min(source.frame_count // 4 - 1, max(0, int(seconds * 120))) * 4
+        frames, slots = preload(source, count, start_frame)
     pygame.display.init()
     try:
         window = Window('4フレーム確認', size=(320, 180), position=(x, y))
@@ -56,7 +57,7 @@ def run(path, x, y, count=4):
         intervals = [b - a for a, b in zip(times, times[1:])]
         if intervals:
             hz = len(intervals) / sum(intervals)
-            print(f'{len(slots)} 枚（{len(slots)/480:.3f}秒）をループ。提示呼び出しの平均 {hz:.1f} 回/秒、間隔中央値 {median(intervals)*1000:.2f} ms、'
+            print(f'{start_frame/480:.3f} 秒から {len(slots)} 枚（{len(slots)/480:.3f}秒）をループ。提示呼び出しの平均 {hz:.1f} 回/秒、間隔中央値 {median(intervals)*1000:.2f} ms、'
                   f'3.13 ms超 {sum(dt > 1.5/480 for dt in intervals)}/{len(intervals)} 回。')
         else:
             print('計測前に終了しました。')
@@ -67,4 +68,6 @@ def run(path, x, y, count=4):
 
 
 if __name__ == '__main__':
-    run(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), 120 if sys.argv[4:] == ['--moving'] else 4)
+    run(sys.argv[1], int(sys.argv[2]), int(sys.argv[3]),
+        120 if '--moving' in sys.argv[4:] else 4,
+        float(sys.argv[5]) if sys.argv[4:5] == ['--at'] else 0.)

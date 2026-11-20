@@ -9,3 +9,6 @@ tests/*.png
 codex_review_run*.log
 codex_review_full_prompt.txt
 tests/*.applied.json
+
+*.sacca-cache
+.sacca-prep-*
